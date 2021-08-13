@@ -1,0 +1,224 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Rangeslider</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="css/my.css">
+    </head>
+  <body>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script>
+// <![CDATA[
+var OMVC = {};
+
+OMVC.makeObservableSubject = function () {
+    var observers = [];
+    var addObserver = function (o) {
+        if (typeof o !== 'function') {
+            throw new Error('observer must be a function');
+        }
+        for (var i = 0, ilen = observers.length; i < ilen; i += 1) {
+            var observer = observers[i];
+            if (observer === o) {
+                throw new Error('observer already in the list');
+            }
+        }
+        observers.push(o);
+    };
+    var removeObserver = function (o) {
+        for (var i = 0, ilen = observers.length; i < ilen; i += 1) {
+            var observer = observers[i];
+            if (observer === o) {
+                observers.splice(i, 1);
+                return;
+            }
+        }
+        throw new Error('could not find observer in list of observers');
+    };
+    var notifyObservers = function (data) {
+        // Make a copy of observer list in case the list
+        // is mutated during the notifications.
+        var observersSnapshot = observers.slice(0);
+        for (var i = 0, ilen = observersSnapshot.length; i < ilen; i += 1) {
+            observersSnapshot[i](data);
+        }
+    };
+    return {
+        addObserver: addObserver,
+        removeObserver: removeObserver,
+        notifyObservers: notifyObservers,
+        notify: notifyObservers
+    };
+};
+
+
+OMVC.Model = function () {
+    var that = this;
+    var items = [];
+    var dates =[];
+    this.modelChangedSubject = OMVC.makeObservableSubject();
+    // this.downButton2 = function (value) {
+    //     if (!value) {
+    //         return;
+    //     }
+    //     items.push(value);
+    //     that.modelChangedSubject.notifyObservers();
+    // };
+    this.moveButton2 = function (value, date) {
+        debugger
+        if (!value) {
+            return;
+        }
+        items.push(value);
+        dates.push(date);
+        that.modelChangedSubject.notifyObservers();
+    };
+    // this.removeCurrentItem = function () {
+    //     if (that.selectedIndex === -1) {
+    //          return;
+    //     }
+    //     items.splice(that.selectedIndex, 1);
+    //     that.modelChangedSubject.notifyObservers();
+    // };
+    this.getItems = function () {
+        return items;
+    };
+    this.getDate = function () {
+        return dates;
+    };
+    // this.selectedIndex = -1;
+    // this.getSelectedIndex = function () {
+    //     return that.selectedIndex;
+    // }
+    // this.setSelectedIndex = function (value) {
+    //     that.selectedIndex = value;
+    //     that.modelChangedSubject.notifyObservers();
+    // }
+ 
+};
+
+OMVC.View = function (model, rootObject) {
+    var that = this;
+    rootObject.toggleClass('range').attr('id', 'id66');
+    that.slider = rootObject;
+    that.between = $('<div/>').appendTo(rootObject);
+    that.between.toggleClass('range__between').attr('id', 'id66b');
+    that.button1 = $('<button></button>').appendTo(rootObject).toggleClass('range__button_1').attr('id', 'id661');
+    that.button2 = $('<button></button>').appendTo(rootObject).toggleClass('range__button_2').attr('id', 'id662');
+    that.input1 = $('<span></span>').appendTo(rootObject).toggleClass('range_inpt1').attr('type', 'number').attr('min', '0').attr('max', '15000').attr('id', 'id66i1');
+    that.input2 = $('<span></span>').appendTo(rootObject).toggleClass('range_inpt2').attr('type', 'number').attr('min', '0').attr('max', '15000').attr('id', 'id66i2');
+    var min = 0;
+    var max = 15000;
+    var per1 = parseInt(5000-min)*100/(max-min);
+    var per2 = parseInt(10000-min)*100/(max-min);
+    var left1 = per1*(that.slider.outerWidth()-that.button1.outerWidth())/100;
+    var left2 = per2*(that.slider.outerWidth()-that.button1.outerWidth())/100;
+    that.button1.css('marginLeft', `${left1}px`); 
+    that.button2.css('marginLeft', `${left2}px`);
+    that.between.css('width', `${left2-left1}px`);
+    that.between.css('marginLeft', `${left1}px`);
+    that.input1.text(5000+' ₽ -');
+    that.input2.text(10000+' ₽');
+
+
+
+
+
+
+    model.modelChangedSubject.addObserver(function () {
+        debugger
+        var item = model.getItems();
+        var date = model.getDate();
+        console.log(item)
+        //console.log(that.button2[0])
+        if (that.button2[0]){
+         
+        var evt = item[0];
+        var left2 = evt.pageX - date[0].shiftX2 - date[0].sliderCoords.left;
+        var right2 = that.slider.outerWidth() - that.button2.outerWidth();
+        if (left2 < 0) left2 = 0;
+        if (left2 > right2) left2 = right2;
+        that.button2.css('marginLeft', `${left2}px`);                      
+                
+                
+        shiftX1 = evt.pageX - date[0].buttonCoords1.left; 
+        var left1 = evt.pageX - shiftX1 - date[0].sliderCoords.left;
+        var right1 = that.slider.outerWidth() - that.button1.outerWidth();  
+        if (left1 < 0) left1 = 0;
+        if (left1 > right1) left1 = right1;                      
+        
+            var per_min = 0;
+            var per_max = 0;
+            
+        if (left1 > left2)
+        {
+            that.between.css('width', `${left1-left2}px`);
+            that.between.css('marginLeft', `${left2}px`);
+            per_min = left2*100/(that.slider.outerWidth()-that.button1.outerWidth());
+            per_max = left1*100/(that.slider.outerWidth()-that.button1.outerWidth());
+        }
+        else
+        {
+            that.between.css('width', `${left2-left1}px`);
+            that.between.css('marginLeft', `${left1}px`);
+            per_min = left1*100/(that.slider.outerWidth()-that.button1.outerWidth());
+            per_max = left2*100/(that.slider.outerWidth()-that.button1.outerWidth());
+        }
+        that.input1.text(parseInt(min)+Math.round((max-min)*per_min/100) + ' ₽-');
+        that.input2.text(parseInt(min)+Math.round((max-min)*per_max/100)+ ' ₽'); 
+        
+        
+    }
+    });
+
+
+
+    this.getCoords = function(elem) {
+              var box = elem[0].getBoundingClientRect();
+              return {
+                  top: box.top + pageYOffset,
+                  left: box.left + pageXOffset
+              };
+          }
+
+};
+
+OMVC.Controller = function (model, view) {
+    view.button2.bind('mousedown', function (evt) {
+        debugger
+        var that = this;
+                var sliderCoords = view.getCoords(view.slider);
+                var betweenCoords = view.getCoords(view.between); 
+                var buttonCoords1 = view.getCoords(view.button1);
+                var buttonCoords2 = view.getCoords(view.button2);
+                var shiftX2 = evt.pageX - buttonCoords2.left; 
+                var shiftX1 = evt.pageX - buttonCoords1.left;
+                this.date = {sliderCoords, betweenCoords, buttonCoords1, buttonCoords2, shiftX1, shiftX2}
+                $(document).bind('mousemove', function (event, date) {
+        model.moveButton2(event, that.date);
+    });
+    // $(document).mouseup(function() {
+    //     //$(document).mousemove = $(document).mouseup = null;
+    //      $(document).off("mousemove");
+    //     });
+
+        return false;
+    });
+
+    // view.buttonRemove.bind('click', function () {
+    //     model.removeCurrentItem();
+    // });
+    // view.select.bind('click', function () {
+    //    model.setSelectedIndex(view.select[0].selectedIndex);
+    // });
+};        
+
+$(document).ready(function () {
+    var model = new OMVC.Model();
+    var view = new OMVC.View(model, $('<div/>').appendTo($("body")));
+    var controller = new OMVC.Controller(model, view);
+});
+// ]]>
+    </script>
+  </body>
+</html>
