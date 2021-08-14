@@ -129,20 +129,25 @@ OMVC.View = function (model, rootObject) {
         debugger
         var item = model.getItems();
         var date = model.getDate();
-        console.log(item)
-        //console.log(that.button2[0])
+        var evt = item[0];
+        var sliderCoords = that.getCoords(that.slider);
+        var betweenCoords = that.getCoords(that.between); 
+        var buttonCoords1 = that.getCoords(that.button1);
+        var buttonCoords2 = that.getCoords(that.button2);
+        var shiftX2 = evt.pageX - buttonCoords2.left; 
+        var shiftX1 = evt.pageX - buttonCoords1.left;
         if (that.button2[0]){
          
-        var evt = item[0];
-        var left2 = evt.pageX - date[0].shiftX2 - date[0].sliderCoords.left;
+        
+        var left2 = evt.pageX - shiftX2 - sliderCoords.left;
         var right2 = that.slider.outerWidth() - that.button2.outerWidth();
         if (left2 < 0) left2 = 0;
         if (left2 > right2) left2 = right2;
         that.button2.css('marginLeft', `${left2}px`);                      
                 
                 
-        shiftX1 = evt.pageX - date[0].buttonCoords1.left; 
-        var left1 = evt.pageX - shiftX1 - date[0].sliderCoords.left;
+        shiftX1 = evt.pageX - buttonCoords1.left; 
+        var left1 = evt.pageX - shiftX1 - sliderCoords.left;
         var right1 = that.slider.outerWidth() - that.button1.outerWidth();  
         if (left1 < 0) left1 = 0;
         if (left1 > right1) left1 = right1;                      
@@ -187,20 +192,20 @@ OMVC.Controller = function (model, view) {
     view.button2.bind('mousedown', function (evt) {
         debugger
         var that = this;
-                var sliderCoords = view.getCoords(view.slider);
-                var betweenCoords = view.getCoords(view.between); 
-                var buttonCoords1 = view.getCoords(view.button1);
-                var buttonCoords2 = view.getCoords(view.button2);
-                var shiftX2 = evt.pageX - buttonCoords2.left; 
-                var shiftX1 = evt.pageX - buttonCoords1.left;
-                this.date = {sliderCoords, betweenCoords, buttonCoords1, buttonCoords2, shiftX1, shiftX2}
+                // var sliderCoords = view.getCoords(view.slider);
+                // var betweenCoords = view.getCoords(view.between); 
+                // var buttonCoords1 = view.getCoords(view.button1);
+                // var buttonCoords2 = view.getCoords(view.button2);
+                // var shiftX2 = evt.pageX - buttonCoords2.left; 
+                // var shiftX1 = evt.pageX - buttonCoords1.left;
+                // this.date = {sliderCoords, betweenCoords, buttonCoords1, buttonCoords2, shiftX1, shiftX2}
                 $(document).bind('mousemove', function (event, date) {
         model.moveButton2(event, that.date);
     });
-    // $(document).mouseup(function() {
-    //     //$(document).mousemove = $(document).mouseup = null;
-    //      $(document).off("mousemove");
-    //     });
+    $(document).mouseup(function() {
+        //$(document).mousemove = $(document).mouseup = null;
+         $(document).off("mousemove");
+        });
 
         return false;
     });
