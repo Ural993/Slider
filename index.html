@@ -54,38 +54,48 @@ OMVC.makeObservableSubject = function () {
 
 OMVC.Model = function () {
     var that = this;
-    var items = [];
-    var dates =[];
+    var event1 = '';
+    var event2 = '';
+    var date1 =[];
+    var date2 =[];
     this.modelChangedSubject = OMVC.makeObservableSubject();
-    // this.downButton2 = function (value) {
-    //     if (!value) {
-    //         return;
-    //     }
-    //     items.push(value);
-    //     that.modelChangedSubject.notifyObservers();
-    // };
     this.moveButton2 = function (value, date) {
-        debugger
+      //  debugger
         if (!value) {
             return;
         }
-        items.push(value);
-        dates.push(date);
+        event2 = value;
+        date2.push(date);
         that.modelChangedSubject.notifyObservers();
     };
-    // this.removeCurrentItem = function () {
-    //     if (that.selectedIndex === -1) {
-    //          return;
-    //     }
-    //     items.splice(that.selectedIndex, 1);
-    //     that.modelChangedSubject.notifyObservers();
-    // };
-    this.getItems = function () {
-        return items;
+    this.moveButton1 = function (value, date) {
+      //  debugger
+        if (!value) {
+            return;
+        }
+        event1 = value;
+        date1.push(date);
+        that.modelChangedSubject.notifyObservers();
     };
-    this.getDate = function () {
-        return dates;
+    this.getEvent1 = function () {
+        return event1;
     };
+    this.getEvent2 = function () {
+        return event2;
+    };
+    this.getDate1 = function () {
+        return date1;
+    };
+    this.getDate2 = function () {
+        return date2;
+    };
+    this.cleanAll =function(){
+        event2 = '';
+        event1 = '';
+        date1=[];
+        date2=[]
+    }
+
     // this.selectedIndex = -1;
     // this.getSelectedIndex = function () {
     //     return that.selectedIndex;
@@ -109,6 +119,7 @@ OMVC.View = function (model, rootObject) {
     that.input2 = $('<span></span>').appendTo(rootObject).toggleClass('range_inpt2').attr('type', 'number').attr('min', '0').attr('max', '15000').attr('id', 'id66i2');
     var min = 0;
     var max = 15000;
+    //debugger
     var per1 = parseInt(5000-min)*100/(max-min);
     var per2 = parseInt(10000-min)*100/(max-min);
     var left1 = per1*(that.slider.outerWidth()-that.button1.outerWidth())/100;
@@ -126,28 +137,22 @@ OMVC.View = function (model, rootObject) {
 
 
     model.modelChangedSubject.addObserver(function () {
-        debugger
-        var item = model.getItems();
-        var date = model.getDate();
-        var evt = item[0];
-        var sliderCoords = that.getCoords(that.slider);
-        var betweenCoords = that.getCoords(that.between); 
-        var buttonCoords1 = that.getCoords(that.button1);
-        var buttonCoords2 = that.getCoords(that.button2);
-        var shiftX2 = evt.pageX - buttonCoords2.left; 
-        var shiftX1 = evt.pageX - buttonCoords1.left;
-        if (that.button2[0]){
-         
-        
-        var left2 = evt.pageX - shiftX2 - sliderCoords.left;
+        var evt1 = model.getEvent1();
+        var evt2 = model.getEvent2();
+        var date1 = model.getDate1();
+        var date2 = model.getDate2();
+        if (evt2){
+             
+        var left2 = evt2.pageX - date2[0].shiftX2 - date2[0].sliderCoords.left;
+   
         var right2 = that.slider.outerWidth() - that.button2.outerWidth();
         if (left2 < 0) left2 = 0;
         if (left2 > right2) left2 = right2;
         that.button2.css('marginLeft', `${left2}px`);                      
                 
                 
-        shiftX1 = evt.pageX - buttonCoords1.left; 
-        var left1 = evt.pageX - shiftX1 - sliderCoords.left;
+        shiftX1 = evt2.pageX - date2[0].buttonCoords1.left; 
+        var left1 = evt2.pageX - shiftX1 - date2[0].sliderCoords.left;
         var right1 = that.slider.outerWidth() - that.button1.outerWidth();  
         if (left1 < 0) left1 = 0;
         if (left1 > right1) left1 = right1;                      
@@ -171,9 +176,44 @@ OMVC.View = function (model, rootObject) {
         }
         that.input1.text(parseInt(min)+Math.round((max-min)*per_min/100) + ' ₽-');
         that.input2.text(parseInt(min)+Math.round((max-min)*per_max/100)+ ' ₽'); 
-        
-        
+        model.cleanAll();
     }
+     else if(evt1){
+      
+        var left1 = evt1.pageX - date1[0].shiftX1 - date1[0].sliderCoords.left;                 
+                  var right1 = that.slider.outerWidth() - that.button1.outerWidth();
+                  if (left1 < 0) left1 = 0;
+                  if (left1 > right1) left1 = right1;
+                  that.button1.css('marginLeft', `${left1}px`);  
+                  
+                  
+                  shiftX2 = evt1.pageX - date1[0].buttonCoords2.left; 
+                  var left2 = evt1.pageX - shiftX2 - date1[0].sliderCoords.left;
+                  var right2 = that.slider.outerWidth() - that.button2.outerWidth();
+                  if (left2 < 0) left2 = 0;
+                  if (left2 > right2) left2 = right2;            
+                   
+                      var per_min = 0;
+                      var per_max = 0;
+                  if (left1 > left2)
+                    {
+                      that.between.css('width', `${left1-left2}px`);
+                      that.between.css('marginLeft', `${left2}px`); 
+                      per_min = left2*100/(that.slider.outerWidth()-that.button1.outerWidth());
+                      per_max = left1*100/(that.slider.outerWidth()-that.button1.outerWidth());
+                    }
+                  else
+                    {
+                      that.between.css('width', `${left2-left1}px`);
+                      that.between.css('marginLeft', `${left1}px`);                
+                      per_min = left1*100/(that.slider.outerWidth()-that.button1.outerWidth());
+                      per_max = left2*100/(that.slider.outerWidth()-that.button1.outerWidth());
+                    }
+                   
+                    that.input1.text(parseInt(min)+Math.round((max-min)*per_min/100)+' ₽-');
+                    that.input2.text(parseInt(min)+Math.round((max-min)*per_max/100)+' ₽'); 
+                    model.cleanAll();
+     }
     });
 
 
@@ -190,16 +230,20 @@ OMVC.View = function (model, rootObject) {
 
 OMVC.Controller = function (model, view) {
     view.button2.bind('mousedown', function (evt) {
-        debugger
+        var sliderCoords = view.getCoords(view.slider);
+        var betweenCoords = view.getCoords(view.between); 
+        var buttonCoords1 = view.getCoords(view.button1);
+        var buttonCoords2 = view.getCoords(view.button2);
+        var shiftX2 = evt.pageX - buttonCoords2.left; 
+        var shiftX1 = evt.pageX - buttonCoords1.left;
         var that = this;
-                // var sliderCoords = view.getCoords(view.slider);
-                // var betweenCoords = view.getCoords(view.between); 
-                // var buttonCoords1 = view.getCoords(view.button1);
-                // var buttonCoords2 = view.getCoords(view.button2);
-                // var shiftX2 = evt.pageX - buttonCoords2.left; 
-                // var shiftX1 = evt.pageX - buttonCoords1.left;
-                // this.date = {sliderCoords, betweenCoords, buttonCoords1, buttonCoords2, shiftX1, shiftX2}
-                $(document).bind('mousemove', function (event, date) {
+        this.date = {
+            shiftX2: shiftX2,
+            shiftX1: shiftX1,
+            sliderCoords:sliderCoords,
+            buttonCoords1:buttonCoords1
+        }
+                $(document).bind('mousemove', function (event) {
         model.moveButton2(event, that.date);
     });
     $(document).mouseup(function() {
@@ -210,6 +254,31 @@ OMVC.Controller = function (model, view) {
         return false;
     });
 
+    view.button1.bind('mousedown', function (evt) {
+        var sliderCoords = view.getCoords(view.slider);
+        var betweenCoords = view.getCoords(view.between); 
+        var buttonCoords1 = view.getCoords(view.button1);
+        var buttonCoords2 = view.getCoords(view.button2);
+        var shiftX2 = evt.pageX - buttonCoords2.left; 
+        var shiftX1 = evt.pageX - buttonCoords1.left;
+        var that = this;
+        this.date = {
+            shiftX2: shiftX2,
+            shiftX1: shiftX1,
+            sliderCoords:sliderCoords,
+            buttonCoords1:buttonCoords1,
+            buttonCoords2:buttonCoords2
+        }
+                $(document).bind('mousemove', function (event) {
+        model.moveButton1(event, that.date);
+    });
+    $(document).mouseup(function() {
+        //$(document).mousemove = $(document).mouseup = null;
+         $(document).off("mousemove");
+        });
+
+        return false;
+    });
     // view.buttonRemove.bind('click', function () {
     //     model.removeCurrentItem();
     // });
