@@ -56,8 +56,10 @@ OMVC.Model = function () {
     var that = this;
     var event1 = '';
     var event2 = '';
+    var event3 = '';
     var date1 =[];
     var date2 =[];
+    var tipStatus = false;
     this.modelChangedSubject = OMVC.makeObservableSubject();
     this.moveButton2 = function (value, date) {
       //  debugger
@@ -77,11 +79,18 @@ OMVC.Model = function () {
         date1.push(date);
         that.modelChangedSubject.notifyObservers();
     };
+    this.input1Change =function(date){
+        event3 = date;
+        that.modelChangedSubject.notifyObservers();
+};
     this.getEvent1 = function () {
         return event1;
     };
     this.getEvent2 = function () {
         return event2;
+    };
+    this.getEvent3 = function () {
+        return event3;
     };
     this.getDate1 = function () {
         return date1;
@@ -95,41 +104,42 @@ OMVC.Model = function () {
         date1=[];
         date2=[]
     }
-
-    // this.selectedIndex = -1;
-    // this.getSelectedIndex = function () {
-    //     return that.selectedIndex;
-    // }
-    // this.setSelectedIndex = function (value) {
-    //     that.selectedIndex = value;
-    //     that.modelChangedSubject.notifyObservers();
-    // }
+    this.toggleTipStatus =function(){
+        if(tipStatus) tipStatus = false;
+        tipStatus =true;
+    }
+    this.getTipStatus = function(){
+        return tipStatus
+    }
+ 
  
 };
 
 OMVC.View = function (model, rootObject) {
     var that = this;
-    rootObject.toggleClass('range').attr('id', 'id66');
-    that.slider = rootObject;
-    that.between = $('<div/>').appendTo(rootObject);
-    that.between.toggleClass('range__between').attr('id', 'id66b');
-    that.button1 = $('<button></button>').appendTo(rootObject).toggleClass('range__button_1').attr('id', 'id661');
-    that.button2 = $('<button></button>').appendTo(rootObject).toggleClass('range__button_2').attr('id', 'id662');
-    that.input1 = $('<span></span>').appendTo(rootObject).toggleClass('range_inpt1').attr('type', 'number').attr('min', '0').attr('max', '15000').attr('id', 'id66i1');
-    that.input2 = $('<span></span>').appendTo(rootObject).toggleClass('range_inpt2').attr('type', 'number').attr('min', '0').attr('max', '15000').attr('id', 'id66i2');
+    var fromValue = 5000;
+    var toValue = 10000;
+    that.slider = rootObject.toggleClass('range');;
+    that.between = $('<div/>').appendTo(rootObject).toggleClass('range__between');;
+    that.button1 = $('<button></button>').appendTo(rootObject).toggleClass('range__button_1');
+    that.button2 = $('<button></button>').appendTo(rootObject).toggleClass('range__button_2');
+    that.input1 = $('<input/>').appendTo(rootObject).toggleClass('range_inpt1');
+    that.input2 = $('<input/>').appendTo(rootObject).toggleClass('range_inpt2');
+    that.minInput = $('<input/>').appendTo(rootObject).toggleClass('minInput');
+    that.maxInput = $('<input/>').appendTo(rootObject).toggleClass('maxInput');
     var min = 0;
     var max = 15000;
-    //debugger
-    var per1 = parseInt(5000-min)*100/(max-min);
-    var per2 = parseInt(10000-min)*100/(max-min);
+    var per1 = parseInt(fromValue-min)*100/(max-min);
+    var per2 = parseInt(toValue-min)*100/(max-min);
     var left1 = per1*(that.slider.outerWidth()-that.button1.outerWidth())/100;
     var left2 = per2*(that.slider.outerWidth()-that.button1.outerWidth())/100;
     that.button1.css('marginLeft', `${left1}px`); 
     that.button2.css('marginLeft', `${left2}px`);
     that.between.css('width', `${left2-left1}px`);
     that.between.css('marginLeft', `${left1}px`);
-    that.input1.text(5000+' ₽ -');
-    that.input2.text(10000+' ₽');
+    that.input1.val(fromValue);
+    that.input2.val(toValue);
+    //that.input2.text(10000+' ₽');
 
 
 
@@ -139,12 +149,12 @@ OMVC.View = function (model, rootObject) {
     model.modelChangedSubject.addObserver(function () {
         var evt1 = model.getEvent1();
         var evt2 = model.getEvent2();
+        var evt3 = model.getEvent3();
         var date1 = model.getDate1();
         var date2 = model.getDate2();
         if (evt2){
              
         var left2 = evt2.pageX - date2[0].shiftX2 - date2[0].sliderCoords.left;
-   
         var right2 = that.slider.outerWidth() - that.button2.outerWidth();
         if (left2 < 0) left2 = 0;
         if (left2 > right2) left2 = right2;
@@ -174,8 +184,8 @@ OMVC.View = function (model, rootObject) {
             per_min = left1*100/(that.slider.outerWidth()-that.button1.outerWidth());
             per_max = left2*100/(that.slider.outerWidth()-that.button1.outerWidth());
         }
-        that.input1.text(parseInt(min)+Math.round((max-min)*per_min/100) + ' ₽-');
-        that.input2.text(parseInt(min)+Math.round((max-min)*per_max/100)+ ' ₽'); 
+        that.input1.val(parseInt(min)+Math.round((max-min)*per_min/100));
+        that.input2.val(parseInt(min)+Math.round((max-min)*per_max/100)); 
         model.cleanAll();
     }
      else if(evt1){
@@ -210,9 +220,32 @@ OMVC.View = function (model, rootObject) {
                       per_max = left2*100/(that.slider.outerWidth()-that.button1.outerWidth());
                     }
                    
-                    that.input1.text(parseInt(min)+Math.round((max-min)*per_min/100)+' ₽-');
-                    that.input2.text(parseInt(min)+Math.round((max-min)*per_max/100)+' ₽'); 
+                    that.input1.val(parseInt(min)+Math.round((max-min)*per_min/100));
+                    that.input2.val(parseInt(min)+Math.round((max-min)*per_max/100)); 
                     model.cleanAll();
+     }
+     else if(evt3){
+         if(evt3 > toValue){
+         if (evt3 > 15000) evt3 = 15000
+            per_min = (evt3*100/(max-min))
+        per_max = (that.input2.val()*100/(max-min))
+        left1 = (per_min*(that.slider.outerWidth()-that.button1.outerWidth()))/100;
+        left2 = Number(that.button2.css('marginLeft').replace(/[^0-9,.]/g, ''));
+        that.button1.css('marginLeft', `${left1}px`);  
+        that.between.css('width', `${left1-left2}px`);
+        that.between.css('marginLeft', `${left2}px`);  
+        that.input1.val(evt3)
+         }
+         else{
+        per_min = (evt3*100/(max-min))
+        per_max = (that.input2.val()*100/(max-min))
+        left1 = (per_min*(that.slider.outerWidth()-that.button1.outerWidth()))/100;
+        left2 = Number(that.button2.css('marginLeft').replace(/[^0-9,.]/g, ''));
+        that.button1.css('marginLeft', `${left1}px`);  
+        that.between.css('width', `${left2-left1}px`);
+        that.between.css('marginLeft', `${left1}px`);     
+         }
+       
      }
     });
 
@@ -279,12 +312,9 @@ OMVC.Controller = function (model, view) {
 
         return false;
     });
-    // view.buttonRemove.bind('click', function () {
-    //     model.removeCurrentItem();
-    // });
-    // view.select.bind('click', function () {
-    //    model.setSelectedIndex(view.select[0].selectedIndex);
-    // });
+    view.input1.bind('keyup', function(event){
+        model.input1Change(event.target.value);
+    })
 };        
 
 $(document).ready(function () {
